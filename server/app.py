@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, make_response, request
 from flask_migrate import Migrate
 from marshmallow import ValidationError
@@ -13,7 +15,8 @@ from schemas import (
 )
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# DATABASE_URL lets the test suite swap in a throwaway database
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False  # readable JSON responses
 
@@ -32,7 +35,7 @@ workout_exercise_schema = WorkoutExerciseSchema()
 
 
 # Error handlers
-#----------------
+# ----------------------
 def error_response(message, status):
     return make_response({'error': message}, status)
 
@@ -80,7 +83,7 @@ def save(obj):
 
 
 # Workouts
-#----------------
+# ------------
 @app.route('/workouts', methods=['GET'])
 def get_workouts():
     workouts = Workout.query.order_by(Workout.date.desc(), Workout.id).all()
@@ -120,7 +123,7 @@ def delete_workout(id):
 
 
 # Exercises
-#----------------
+# ---------------
 @app.route('/exercises', methods=['GET'])
 def get_exercises():
     exercises = Exercise.query.order_by(Exercise.name).all()
@@ -166,7 +169,7 @@ def delete_exercise(id):
 
 
 # Adding an exercise to a workout
-#---------------------------------
+# -------------------------------------
 @app.route(
     '/workouts/<int:workout_id>/exercises/<int:exercise_id>/workout_exercises',
     methods=['POST'],
